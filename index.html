@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>StructureScan AI - Professional Demo</title>
+    <link rel="manifest" href="/manifest.json">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
@@ -30,11 +31,19 @@
 
         .header {
             background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-            padding: 2rem 1.5rem;
+            padding: 1.5rem;
             box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
         }
 
-        .header h1 { font-size: 1.75rem; font-weight: 700; margin-bottom: 0.5rem; }
+        .header-content {
+            flex-grow: 1;
+            text-align: center;
+        }
+
+        .header h1 { font-size: 1.5rem; font-weight: 700; margin: 0; }
         .header .subtitle { opacity: 0.9; font-size: 0.95rem; }
         .company-tag {
             display: inline-block;
@@ -442,6 +451,100 @@ textarea.form-input {
     resize: vertical;
     min-height: 80px;
 }
+.menu-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 8px;
+    transition: background 0.2s;
+}
+
+.menu-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.menu-btn svg {
+    width: 28px;
+    height: 28px;
+    stroke: var(--text-primary);
+    stroke-width: 2.5;
+}
+
+.side-menu {
+    position: fixed;
+    top: 0;
+    left: -300px;
+    width: 300px;
+    height: 100%;
+    background: var(--bg-dark);
+    box-shadow: 4px 0 15px rgba(0,0,0,0.3);
+    z-index: 1001;
+    transition: left 0.3s ease;
+    display: flex;
+    flex-direction: column;
+}
+
+.side-menu.open {
+    left: 0;
+}
+
+.menu-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.menu-header h2 {
+    font-size: 1.25rem;
+    margin-bottom: 0.25rem;
+}
+
+.menu-header p {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+.menu-nav {
+    flex-grow: 1;
+    list-style: none;
+    padding: 1rem 0;
+}
+
+.menu-nav a {
+    display: block;
+    color: var(--text-primary);
+    text-decoration: none;
+    padding: 1rem 1.5rem;
+    font-size: 1rem;
+    font-weight: 500;
+    border-left: 3px solid transparent;
+    transition: all 0.2s;
+}
+
+.menu-nav a:hover, .menu-nav a.active {
+    background: rgba(37, 99, 235, 0.1);
+    border-left-color: var(--primary);
+    color: var(--primary);
+}
+
+.menu-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease;
+}
+
+.menu-overlay.open {
+    opacity: 1;
+    visibility: visible;
+}
+
 
         @media (max-width: 768px) {
             .stats-grid, .sample-grid, .results-summary { grid-template-columns: 1fr; }
@@ -449,12 +552,31 @@ textarea.form-input {
     </style>
 </head>
 <body>
-    <div class="header">
-        <div style="max-width: 1200px; margin: 0 auto;">
-            <h1>StructureScan AI</h1>
-            <p class="subtitle">Professional Structural Analysis & Damage Detection</p>
-            <div class="company-tag">Powered by Restoration Experts Inc</div>
+    <div id="sideMenu" class="side-menu">
+        <div class="menu-header">
+            <h2>StructureScan AI</h2>
+            <p>Menu</p>
         </div>
+        <nav class="menu-nav">
+            <a href="#" onclick="showDashboardView()">Dashboard</a>
+            <a href="#" onclick="showProjectsView()">Projects</a>
+            <a href="#" onclick="showSettingsView()">Settings</a>
+        </nav>
+    </div>
+    <div id="menuOverlay" class="menu-overlay" onclick="toggleMenu()"></div>
+
+    <div class="header">
+        <button class="menu-btn" onclick="toggleMenu()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <line x1="3" y1="12" x2="21" y2="12"></line>
+                <line x1="3" y1="6" x2="21" y2="6"></line>
+                <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
+        </button>
+        <div class="header-content">
+            <h1>StructureScan AI</h1>
+        </div>
+        <div style="width: 44px;"></div> <!-- Spacer -->
     </div>
 
     <div class="container">
@@ -582,6 +704,58 @@ textarea.form-input {
                 <button class="btn-primary">Schedule Repairs</button>
             </div>
         </div>
+
+        <!-- Projects View -->
+        <div id="projectsView" class="hidden">
+            <h2 style="font-size: 2rem; margin-bottom: 1rem;">Projects</h2>
+            <div id="projectList" class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
+                 <!-- Projects will be dynamically inserted here -->
+                <div class="stat-card" style="cursor: pointer;" onclick="alert('Navigate to project details')">
+                    <div class="stat-label">123 Main Street</div>
+                    <div class="stat-value" style="font-size: 1.5rem;">3 Scans</div>
+                    <div class="stat-trend">Last scan: 11/08/2025</div>
+                </div>
+                 <div class="stat-card" style="cursor: pointer;" onclick="alert('Navigate to project details')">
+                    <div class="stat-label">Downtown Pipe Inspection</div>
+                    <div class="stat-value" style="font-size: 1.5rem;">1 Scan</div>
+                    <div class="stat-trend">Last scan: 11/05/2025</div>
+                </div>
+                <div class="action-card" onclick="openProjectModal()">
+                     <h3 style="margin-bottom: 1rem;">Create New Project</h3>
+                    <p>Start a new scan and save it as a new project.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings View -->
+        <div id="settingsView" class="hidden">
+            <h2 style="font-size: 2rem; margin-bottom: 2rem;">Settings</h2>
+            <div class="form-group">
+                <label>Company Name</label>
+                <input type="text" id="companyName" placeholder="e.g., Restoration Experts Inc" class="form-input">
+            </div>
+            <div class="form-group">
+                <label>Company Address</label>
+                <input type="text" id="companyAddress" placeholder="e.g., 123 Main St, Fort Wayne, IN" class="form-input">
+            </div>
+            <div class="form-group">
+                <label>Contact Info</label>
+                <input type="text" id="contactInfo" placeholder="e.g., John Smith (555) 123-4567" class="form-input">
+            </div>
+            <button class="btn-primary" onclick="saveSettings()" style="margin-right: 1rem;">Save Settings</button>
+            <button class="btn-secondary" onclick="requestNotificationPermission()">Enable Notifications</button>
+        </div>
+
+        <!-- Project Detail View -->
+        <div id="projectDetailView" class="hidden">
+            <button class="btn-secondary" onclick="showProjectsView()">← Back to Projects</button>
+            <div id="projectDetailHeader" style="margin: 2rem 0;">
+                <!-- Project details will be injected here -->
+            </div>
+            <div id="projectScansList" class="sample-grid" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
+                <!-- Scans will be injected here -->
+            </div>
+        </div>
     </div>
 <!-- Project Setup Modal -->
 <div id="projectModal" class="modal hidden">
@@ -592,19 +766,19 @@ textarea.form-input {
         </div>
         <div class="modal-body">
             <div class="form-group">
-                <label>Project Name</label>
+                <label for="projectName">Project Name</label>
                 <input type="text" id="projectName" placeholder="e.g., 123 Main Street Inspection" class="form-input">
             </div>
             <div class="form-group">
-                <label>Property Address (Optional)</label>
+                <label for="propertyAddress">Property Address (Optional)</label>
                 <input type="text" id="propertyAddress" placeholder="e.g., 123 Main St, Fort Wayne, IN" class="form-input">
             </div>
             <div class="form-group">
-                <label>Client Name (Optional)</label>
+                <label for="clientName">Client Name (Optional)</label>
                 <input type="text" id="clientName" placeholder="e.g., John Smith" class="form-input">
             </div>
             <div class="form-group">
-                <label>Notes (Optional)</label>
+                <label for="scanNotes">Notes (Optional)</label>
                 <textarea id="scanNotes" placeholder="Add any relevant notes..." class="form-input" rows="3"></textarea>
             </div>
         </div>
@@ -663,20 +837,58 @@ textarea.form-input {
         };
 
         let currentSample = null;
-        let currentProject = {
-    name: '',
-    address: '',
-    client: '',
-    notes: ''
-};
+        let currentProject = null;
 
+        const allViews = ['dashboardView', 'sampleView', 'cameraView', 'resultsView', 'projectsView', 'settingsView', 'projectDetailView'];
+
+        function toggleMenu() {
+            document.getElementById('sideMenu').classList.toggle('open');
+            document.getElementById('menuOverlay').classList.toggle('open');
+        }
+
+        function showView(viewId) {
+            allViews.forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+            });
+            document.getElementById(viewId).classList.remove('hidden');
+            // Always close the menu when showing a new view.
+            document.getElementById('sideMenu').classList.remove('open');
+            document.getElementById('menuOverlay').classList.remove('open');
+        }
+
+        function showDashboardView() { showView('dashboardView'); }
+        function showProjectsView() {
+            renderProjectList();
+            showView('projectsView');
+        }
+        function showSettingsView() { showView('settingsView'); }
 
         function showDashboard() {
+            allViews.forEach(id => document.getElementById(id).classList.add('hidden'));
             document.getElementById('dashboardView').classList.remove('hidden');
-            document.getElementById('sampleView').classList.add('hidden');
-            document.getElementById('cameraView').classList.add('hidden');
-            document.getElementById('resultsView').classList.add('hidden');
         }
+
+        // --- LocalStorage Project Management ---
+        function getProjects() {
+            return JSON.parse(localStorage.getItem('struc_projects') || '[]');
+        }
+
+        function saveProjects(projects) {
+            localStorage.setItem('struc_projects', JSON.stringify(projects));
+        }
+
+        function saveScanToProject(projectId, scanData) {
+            const projects = getProjects();
+            const project = projects.find(p => p.id === projectId);
+            if (project) {
+                if (!project.scans) {
+                    project.scans = [];
+                }
+                project.scans.push(scanData);
+                saveProjects(projects);
+            }
+        }
+
        function openProjectModal() {
     document.getElementById('projectModal').classList.remove('hidden');
 }
@@ -697,18 +909,156 @@ function saveProjectAndContinue() {
         alert('Please enter a project name');
         return;
     }
-    
-    currentProject = {
+
+    const newProject = {
+        id: 'proj_' + Date.now(),
         name: projectName,
         address: document.getElementById('propertyAddress').value.trim(),
         client: document.getElementById('clientName').value.trim(),
         notes: document.getElementById('scanNotes').value.trim(),
-        date: new Date().toLocaleString()
+        createdAt: new Date().toISOString(),
+        scans: []
     };
     
+    const projects = getProjects();
+    projects.push(newProject);
+    saveProjects(projects);
+
+    currentProject = newProject;
+
     closeProjectModal();
     showSamples();
 }
+
+function renderProjectList() {
+    const projects = getProjects();
+    const projectListEl = document.getElementById('projectList');
+    projectListEl.innerHTML = ''; // Clear existing list
+
+    if (projects.length === 0) {
+        projectListEl.innerHTML = `<div class="action-card" onclick="openProjectModal()">
+                                        <h3 style="margin-bottom: 1rem;">No Projects Found</h3>
+                                        <p>Start a new scan to create your first project.</p>
+                                    </div>`;
+        return;
+    }
+
+    projects.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    projects.forEach(project => {
+        const lastScanDate = project.scans.length > 0 ? new Date(project.scans[project.scans.length - 1].date).toLocaleDateString() : 'No scans yet';
+        const card = `
+            <div class="stat-card" style="cursor: pointer;" onclick="viewProject('${project.id}')">
+                <div class="stat-label">${project.name}</div>
+                <div class="stat-value" style="font-size: 1.5rem;">${project.scans.length} Scans</div>
+                <div class="stat-trend">Last scan: ${lastScanDate}</div>
+            </div>
+        `;
+        projectListEl.innerHTML += card;
+    });
+
+    // Add the "Create New" card at the end
+    projectListEl.innerHTML += `<div class="action-card" onclick="openProjectModal()">
+                                     <h3 style="margin-bottom: 1rem;">Create New Project</h3>
+                                    <p>Start a new scan and save it as a new project.</p>
+                                </div>`;
+}
+
+function viewProject(projectId) {
+    const projects = getProjects();
+    const project = projects.find(p => p.id === projectId);
+    if (!project) return;
+
+    currentProject = project; // Set the current project context
+
+    const headerEl = document.getElementById('projectDetailHeader');
+    headerEl.innerHTML = `
+        <h2 style="font-size: 2rem; margin-bottom: 0.5rem;">${project.name}</h2>
+        <p style="color: var(--text-secondary);">${project.address || 'No address provided'}</p>
+    `;
+
+    const scansListEl = document.getElementById('projectScansList');
+    scansListEl.innerHTML = ''; // Clear previous scans
+
+    if (project.scans && project.scans.length > 0) {
+        project.scans.forEach(scan => {
+            const scanCard = `
+                <div class="sample-card">
+                    <img src="${scan.results.image}" class="sample-image" alt="${scan.results.issue.type}">
+                    <div class="sample-info">
+                        <div class="sample-title">${scan.results.issue.type}</div>
+                        <div class="sample-desc">Scanned on ${new Date(scan.date).toLocaleDateString()}</div>
+                    </div>
+                </div>
+            `;
+            scansListEl.innerHTML += scanCard;
+        });
+    }
+
+    // Add "Add New Scan" button
+    scansListEl.innerHTML += `
+        <div class="action-card" onclick="startNewScanForCurrentProject()">
+            <h3 style="margin-bottom: 1rem;">Add New Scan</h3>
+            <p>Start a new scan for this project.</p>
+        </div>
+    `;
+
+    showView('projectDetailView');
+}
+
+function startNewScanForCurrentProject() {
+    // This function leverages the fact that currentProject is already set
+    if (!currentProject) {
+        alert("No project selected!");
+        return;
+    }
+    showSamples();
+}
+
+        // --- Settings Management ---
+        function saveSettings() {
+            const settings = {
+                companyName: document.getElementById('companyName').value.trim(),
+                companyAddress: document.getElementById('companyAddress').value.trim(),
+                contactInfo: document.getElementById('contactInfo').value.trim(),
+            };
+            localStorage.setItem('struc_settings', JSON.stringify(settings));
+            alert('Settings saved!');
+            showDashboardView();
+        }
+
+        function loadSettings() {
+            const settings = JSON.parse(localStorage.getItem('struc_settings') || '{}');
+            document.getElementById('companyName').value = settings.companyName || '';
+            document.getElementById('companyAddress').value = settings.companyAddress || '';
+            document.getElementById('contactInfo').value = settings.contactInfo || '';
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadSettings();
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(registration => console.log('Service Worker registered with scope:', registration.scope))
+                    .catch(error => console.error('Service Worker registration failed:', error));
+            }
+        });
+
+        function requestNotificationPermission() {
+            if (!('Notification' in window)) {
+                alert('This browser does not support desktop notification');
+                return;
+            }
+
+            Notification.requestPermission().then(permission => {
+                if (permission === 'granted') {
+                    alert('Notifications enabled!');
+                    // Here you would typically send the subscription to your server
+                } else {
+                    alert('Notifications denied.');
+                }
+            });
+        }
+
         function showSamples() {
             document.getElementById('dashboardView').classList.add('hidden');
             document.getElementById('sampleView').classList.remove('hidden');
@@ -787,8 +1137,9 @@ function saveProjectAndContinue() {
             document.getElementById('resultsView').classList.remove('hidden');
             
             const issue = currentSample.issue;
+            const scanDate = new Date();
             
-            document.getElementById('timestamp').textContent = new Date().toLocaleString();
+            document.getElementById('timestamp').textContent = scanDate.toLocaleString();
 // Add project info to results if exists
 if (currentProject.name) {
     const projectInfo = `
@@ -799,6 +1150,14 @@ if (currentProject.name) {
         </div>
     `;
     document.querySelector('#resultsView h2').insertAdjacentHTML('afterend', projectInfo);
+
+    const scanData = {
+        id: 'scan_' + Date.now(),
+        date: scanDate.toISOString(),
+        sampleType: Object.keys(samples).find(key => samples[key] === currentSample),
+        results: currentSample
+    };
+    saveScanToProject(currentProject.id, scanData);
 }
             document.getElementById('resultImage').src = currentSample.image;
             document.getElementById('confidenceValue').textContent = currentSample.confidence + '%';
