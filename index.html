@@ -1,0 +1,1022 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StructureScan AI - Professional Demo</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1e40af;
+            --bg-dark: #0f172a;
+            --bg-card: #1e293b;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --border: #334155;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, var(--bg-dark) 0%, #1a2332 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            padding: 2rem 1.5rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+
+        .header h1 { font-size: 1.75rem; font-weight: 700; margin-bottom: 0.5rem; }
+        .header .subtitle { opacity: 0.9; font-size: 0.95rem; }
+        .company-tag {
+            display: inline-block;
+            background: rgba(255,255,255,0.15);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            margin-top: 1rem;
+        }
+
+        .container { max-width: 1200px; margin: 0 auto; padding: 2rem 1.5rem; }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            padding: 1.75rem;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            border-top: 3px solid var(--primary);
+        }
+
+        .stat-label { color: var(--text-secondary); font-size: 0.875rem; text-transform: uppercase; margin-bottom: 0.75rem; }
+        .stat-value { font-size: 2.5rem; font-weight: 700; margin-bottom: 0.5rem; }
+        .stat-trend { font-size: 0.875rem; color: var(--success); }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            border: none;
+            padding: 1rem 2.5rem;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+            transition: all 0.3s;
+        }
+
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(37, 99, 235, 0.4); }
+
+        .btn-secondary {
+            background: var(--bg-card);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+            padding: 0.875rem 2rem;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .action-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 2.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .action-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(37, 99, 235, 0.2);
+            border-color: var(--primary);
+        }
+
+        .sample-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .sample-card {
+            background: var(--bg-card);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .sample-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--primary);
+            box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3);
+        }
+
+        .sample-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            background: #1a1a1a;
+        }
+
+        .sample-info { padding: 1.25rem; }
+        .sample-title { font-weight: 600; margin-bottom: 0.5rem; }
+        .sample-desc { font-size: 0.875rem; color: var(--text-secondary); }
+
+        .camera-view {
+            background: #000;
+            border-radius: 16px;
+            overflow: hidden;
+            position: relative;
+            margin: 2rem 0;
+            border: 2px solid var(--border);
+        }
+
+        .camera-preview {
+            width: 100%;
+            height: auto;
+            display: block;
+            max-height: 600px;
+            object-fit: contain;
+        }
+
+        .camera-overlay {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+        }
+
+        .detection-box {
+            position: absolute;
+            border: 3px solid;
+            border-radius: 8px;
+            animation: boxAppear 0.5s ease-out;
+        }
+
+        @keyframes boxAppear {
+            from { opacity: 0; transform: scale(0.8); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .detection-box.high { border-color: var(--danger); box-shadow: 0 0 20px rgba(239, 68, 68, 0.6); }
+        .detection-box.medium { border-color: var(--warning); box-shadow: 0 0 20px rgba(245, 158, 11, 0.6); }
+
+        .detection-label {
+            position: absolute;
+            top: -32px;
+            left: 0;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            white-space: nowrap;
+            animation: labelSlide 0.3s ease-out 0.3s both;
+        }
+
+        @keyframes labelSlide {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .camera-controls {
+            padding: 1.5rem;
+            background: rgba(15, 23, 42, 0.95);
+            display: flex;
+            justify-content: center;
+        }
+
+        .analysis-status {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+            margin: 2rem 0;
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            height: 8px;
+            background: rgba(37, 99, 235, 0.2);
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 1.5rem 0;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--primary-dark));
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+        .status-text { color: var(--text-secondary); margin-top: 1rem; }
+
+        .results-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .summary-card {
+            background: var(--bg-card);
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+
+        .summary-card.confidence { border-left: 3px solid var(--primary); }
+        .summary-card.issues { border-left: 3px solid var(--danger); }
+        .summary-card.cost { border-left: 3px solid var(--warning); }
+
+        .summary-label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+        }
+
+        .summary-value { font-size: 2.25rem; font-weight: 700; line-height: 1; }
+
+        .issues-container {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+            margin: 2rem 0;
+        }
+
+        .issues-header {
+            background: rgba(37, 99, 235, 0.1);
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .issue-item { padding: 1.5rem; border-bottom: 1px solid var(--border); }
+        .issue-item:last-child { border-bottom: none; }
+
+        .issue-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 1rem;
+        }
+
+        .issue-title { font-size: 1.125rem; font-weight: 600; margin-bottom: 0.25rem; }
+        .issue-location { color: var(--text-secondary); font-size: 0.875rem; }
+
+        .severity-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .severity-high {
+            background: rgba(239, 68, 68, 0.2);
+            color: #fca5a5;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .severity-medium {
+            background: rgba(245, 158, 11, 0.2);
+            color: #fcd34d;
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+
+        .issue-meta {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .meta-label { color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 0.25rem; }
+        .meta-value { font-weight: 600; }
+
+        .hidden { display: none !important; }
+        .modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    backdrop-filter: blur(4px);
+}
+
+.modal-content {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    width: 90%;
+    max-width: 500px;
+    max-height: 90vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    animation: modalAppear 0.3s ease-out;
+}
+
+@keyframes modalAppear {
+    from { opacity: 0; transform: scale(0.9) translateY(-20px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.modal-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h2 {
+    font-size: 1.5rem;
+    margin: 0;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 2rem;
+    cursor: pointer;
+    line-height: 1;
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    transition: all 0.2s;
+}
+
+.modal-close:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+}
+
+.modal-body {
+    padding: 1.5rem;
+    overflow-y: auto;
+}
+
+.modal-footer {
+    padding: 1.5rem;
+    border-top: 1px solid var(--border);
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group:last-child {
+    margin-bottom: 0;
+}
+
+.form-group label {
+    display: block;
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.form-input {
+    width: 100%;
+    background: var(--bg-dark);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.75rem;
+    color: var(--text-primary);
+    font-size: 1rem;
+    font-family: inherit;
+    transition: all 0.2s;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.form-input::placeholder {
+    color: var(--text-secondary);
+    opacity: 0.5;
+}
+
+textarea.form-input {
+    resize: vertical;
+    min-height: 80px;
+}
+
+        @media (max-width: 768px) {
+            .stats-grid, .sample-grid, .results-summary { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div style="max-width: 1200px; margin: 0 auto;">
+            <h1>StructureScan AI</h1>
+            <p class="subtitle">Professional Structural Analysis & Damage Detection</p>
+            <div class="company-tag">Powered by Restoration Experts Inc</div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Dashboard -->
+        <div id="dashboardView">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Total Scans</div>
+                    <div class="stat-value">47</div>
+                    <div class="stat-trend">↑ 12% this month</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Issues Detected</div>
+                    <div class="stat-value">12</div>
+                    <div class="stat-trend">3 high priority</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Est. Savings</div>
+                    <div class="stat-value">$8.4K</div>
+                    <div class="stat-trend">Early detection value</div>
+                </div>
+            </div>
+
+            <div class="action-card" onclick="openProjectModal()">
+                <div style="width: 80px; height: 80px; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); border-radius: 20px; margin: 0 auto 1.5rem; display: flex; align-items: center; justify-content: center;">
+                    <svg style="width: 40px; height: 40px; stroke: white; stroke-width: 2; fill: none;" viewBox="0 0 24 24">
+                        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                        <circle cx="12" cy="13" r="4"></circle>
+                    </svg>
+                </div>
+                <h2>Start Structural Analysis</h2>
+                <p>Capture images to detect structural issues, water damage, and estimate repair costs using AI-powered analysis.</p>
+                <button class="btn-primary" style="margin-top: 1.5rem;">Begin Scan</button>
+            </div>
+        </div>
+
+        <!-- Sample Selection -->
+        <div id="sampleView" class="hidden">
+            <button class="btn-secondary" onclick="showDashboard()">← Back</button>
+            <h2 style="margin: 2rem 0 1rem; font-size: 1.75rem;">Select Sample to Analyze</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 1rem;">Choose a structural issue to see AI detection in action</p>
+            
+            <div class="sample-grid">
+                <div class="sample-card" onclick="selectSample('water')">
+                    <img src='https://i.imgur.com/sVkNhey.jpg'w=400&h=300&fit=crop" class="sample-image" alt="Water Damage">
+                    <div class="sample-info">
+                        <div class="sample-title">Water Damage - Wall</div>
+                        <div class="sample-desc">Visible water staining with potential mold growth</div>
+                    </div>
+                </div>
+                <div class="sample-card" onclick="selectSample('crack')">
+                    <img src='https://i.imgur.com/AnkAyMC.jpg'w=400&h=300&fit=crop" class="sample-image" alt="Wall Crack">
+                    <div class="sample-info">
+                        <div class="sample-title">Structural Crack - Wall</div>
+                        <div class="sample-desc">Vertical crack indicating settlement issues</div>
+                    </div>
+                </div>
+                <div class="sample-card" onclick="selectSample('corrosion')">
+                    <img src='https://i.imgur.com/6jrvabV.jpg'w=400&h=300&fit=crop" class="sample-image" alt="Pipe Corrosion">
+                    <div class="sample-info">
+                        <div class="sample-title">Pipe Corrosion</div>
+                        <div class="sample-desc">Metal corrosion on exposed plumbing</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Camera/Analysis -->
+        <div id="cameraView" class="hidden">
+            <button class="btn-secondary" onclick="showSamples()">← Back</button>
+            
+            <div class="camera-view">
+                <img id="previewImage" class="camera-preview" alt="Preview">
+                <div class="camera-overlay" id="detectionOverlay"></div>
+                <div class="camera-controls">
+                    <button class="btn-primary" id="analyzeBtn" onclick="runAnalysis()">Analyze Image</button>
+                </div>
+            </div>
+
+            <div id="analysisStatus" class="analysis-status hidden">
+                <h3>AI Analysis in Progress</h3>
+                <div class="progress-bar-container">
+                    <div class="progress-bar" id="progressBar"></div>
+                </div>
+                <div class="status-text" id="statusText">Initializing detection algorithms...</div>
+            </div>
+        </div>
+
+        <!-- Results -->
+        <div id="resultsView" class="hidden">
+            <button class="btn-secondary" onclick="showDashboard()">← Start New Scan</button>
+            
+            <h2 style="font-size: 2rem; margin: 2rem 0 0.5rem;">Analysis Complete</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 2rem;">Scan completed • <span id="timestamp"></span></p>
+
+            <div class="camera-view">
+                <img id="resultImage" class="camera-preview" alt="Result">
+                <div class="camera-overlay" id="resultOverlay"></div>
+            </div>
+
+            <div class="results-summary">
+                <div class="summary-card confidence">
+                    <div class="summary-label">AI Confidence</div>
+                    <div class="summary-value" style="color: var(--primary);" id="confidenceValue">91%</div>
+                </div>
+                <div class="summary-card issues">
+                    <div class="summary-label">Issues Found</div>
+                    <div class="summary-value" style="color: var(--danger);" id="issuesCount">1</div>
+                </div>
+                <div class="summary-card cost">
+                    <div class="summary-label">Est. Repair Cost</div>
+                    <div class="summary-value" style="color: var(--warning); font-size: 1.75rem;" id="costValue">$2.4K-3.8K</div>
+                </div>
+            </div>
+
+            <div class="issues-container">
+                <div class="issues-header">
+                    <h3>Detected Issues</h3>
+                </div>
+                <div id="issuesList"></div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 2rem;">
+                <button class="btn-primary" onclick="exportPDF()">Export Full Report</button>
+                <button class="btn-primary">Schedule Repairs</button>
+            </div>
+        </div>
+    </div>
+<!-- Project Setup Modal -->
+<div id="projectModal" class="modal hidden">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Create New Scan</h2>
+            <button class="modal-close" onclick="closeProjectModal()">×</button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label>Project Name</label>
+                <input type="text" id="projectName" placeholder="e.g., 123 Main Street Inspection" class="form-input">
+            </div>
+            <div class="form-group">
+                <label>Property Address (Optional)</label>
+                <input type="text" id="propertyAddress" placeholder="e.g., 123 Main St, Fort Wayne, IN" class="form-input">
+            </div>
+            <div class="form-group">
+                <label>Client Name (Optional)</label>
+                <input type="text" id="clientName" placeholder="e.g., John Smith" class="form-input">
+            </div>
+            <div class="form-group">
+                <label>Notes (Optional)</label>
+                <textarea id="scanNotes" placeholder="Add any relevant notes..." class="form-input" rows="3"></textarea>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-secondary" onclick="closeProjectModal()">Cancel</button>
+            <button class="btn-primary" onclick="saveProjectAndContinue()">Continue to Scan</button>
+        </div>
+    </div>
+</div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script>
+        const samples = {
+            water: {
+                image: 'https://i.imgur.com/sVkNhey.jpg',
+                confidence: 94,
+                issue: {
+                    type: 'Water Damage & Mold Growth',
+                    location: 'Baseboard - Lower Wall Section',
+                    severity: 'high',
+                    desc: 'Active water intrusion with visible mold growth and paint deterioration. Dark staining indicates prolonged moisture exposure. Immediate remediation required to prevent health hazards and structural damage.',
+                    confidence: 94,
+                    cost: '$2,400-$3,800',
+                    urgency: '7-14 days',
+                    box: { top: '40%', left: '20%', width: '35%', height: '30%' }
+                }
+            },
+            corrosion: {
+                image: 'https://i.imgur.com/6jrvabV.jpg',
+                confidence: 96,
+                issue: {
+                    type: 'Severe Pipe Corrosion',
+                    location: 'Exposed Plumbing Lines - Basement',
+                    severity: 'high',
+                    desc: 'Advanced corrosion with heavy rust buildup and material degradation. Multiple connection points compromised. Critical failure risk - pipe replacement urgent to prevent catastrophic water damage and flooding.',
+                    confidence: 96,
+                    cost: '$1,800-$3,200',
+                    urgency: '7-21 days',
+                    box: { top: '35%', left: '30%', width: '40%', height: '35%' }
+                }
+            },
+            crack: {
+                image: 'https://i.imgur.com/AnkAyMC.jpg',
+                confidence: 89,
+                issue: {
+                    type: 'Structural Crack Pattern',
+                    location: 'Interior Wall - Main Structure',
+                    severity: 'medium',
+                    desc: 'Multiple stress cracks detected across wall surface. Pattern indicates structural settlement or foundation movement. Significant cracking visible throughout. Monitoring and repair recommended to prevent progression.',
+                    confidence: 89,
+                    cost: '$1,200-$2,400',
+                    urgency: '30-60 days',
+                    box: { top: '15%', left: '20%', width: '60%', height: '70%' }
+                }
+            }
+        };
+
+        let currentSample = null;
+        let currentProject = {
+    name: '',
+    address: '',
+    client: '',
+    notes: ''
+};
+
+
+        function showDashboard() {
+            document.getElementById('dashboardView').classList.remove('hidden');
+            document.getElementById('sampleView').classList.add('hidden');
+            document.getElementById('cameraView').classList.add('hidden');
+            document.getElementById('resultsView').classList.add('hidden');
+        }
+       function openProjectModal() {
+    document.getElementById('projectModal').classList.remove('hidden');
+}
+
+function closeProjectModal() {
+    document.getElementById('projectModal').classList.add('hidden');
+    // Clear the form
+    document.getElementById('projectName').value = '';
+    document.getElementById('propertyAddress').value = '';
+    document.getElementById('clientName').value = '';
+    document.getElementById('scanNotes').value = '';
+}
+
+function saveProjectAndContinue() {
+    const projectName = document.getElementById('projectName').value.trim();
+    
+    if (!projectName) {
+        alert('Please enter a project name');
+        return;
+    }
+    
+    currentProject = {
+        name: projectName,
+        address: document.getElementById('propertyAddress').value.trim(),
+        client: document.getElementById('clientName').value.trim(),
+        notes: document.getElementById('scanNotes').value.trim(),
+        date: new Date().toLocaleString()
+    };
+    
+    closeProjectModal();
+    showSamples();
+}
+        function showSamples() {
+            document.getElementById('dashboardView').classList.add('hidden');
+            document.getElementById('sampleView').classList.remove('hidden');
+            document.getElementById('cameraView').classList.add('hidden');
+            document.getElementById('resultsView').classList.add('hidden');
+        }
+
+        function selectSample(type) {
+            currentSample = samples[type];
+            document.getElementById('sampleView').classList.add('hidden');
+            document.getElementById('cameraView').classList.remove('hidden');
+            document.getElementById('previewImage').src = currentSample.image;
+            document.getElementById('detectionOverlay').innerHTML = '';
+            document.getElementById('analysisStatus').classList.add('hidden');
+            document.getElementById('analyzeBtn').disabled = false;
+        }
+
+        function runAnalysis() {
+            document.getElementById('analyzeBtn').disabled = true;
+            document.getElementById('analysisStatus').classList.remove('hidden');
+            
+            const statuses = [
+                'Initializing AI detection...',
+                'Analyzing image structure...',
+                'Detecting anomalies...',
+                'Measuring damage severity...',
+                'Calculating repair costs...',
+                'Finalizing analysis...'
+            ];
+            
+            let progress = 0;
+            let statusIndex = 0;
+            
+            const interval = setInterval(() => {
+                progress += 2;
+                document.getElementById('progressBar').style.width = progress + '%';
+                
+                if (progress % 17 === 0 && statusIndex < statuses.length) {
+                    document.getElementById('statusText').textContent = statuses[statusIndex];
+                    statusIndex++;
+                }
+                
+                if (progress === 60) {
+                    showDetectionBox();
+                }
+                
+                if (progress >= 100) {
+                    clearInterval(interval);
+                    setTimeout(showResults, 800);
+                }
+            }, 60);
+        }
+
+        function showDetectionBox() {
+            const overlay = document.getElementById('detectionOverlay');
+            const issue = currentSample.issue;
+            
+            const box = document.createElement('div');
+            box.className = `detection-box ${issue.severity}`;
+            box.style.top = issue.box.top;
+            box.style.left = issue.box.left;
+            box.style.width = issue.box.width;
+            box.style.height = issue.box.height;
+            
+            const label = document.createElement('div');
+            label.className = 'detection-label';
+            label.textContent = issue.type + ' Detected';
+            label.style.color = issue.severity === 'high' ? '#fca5a5' : '#fcd34d';
+            box.appendChild(label);
+            
+            overlay.appendChild(box);
+        }
+
+        function showResults() {
+            document.getElementById('cameraView').classList.add('hidden');
+            document.getElementById('resultsView').classList.remove('hidden');
+            
+            const issue = currentSample.issue;
+            
+            document.getElementById('timestamp').textContent = new Date().toLocaleString();
+// Add project info to results if exists
+if (currentProject.name) {
+    const projectInfo = `
+        <div style="background: var(--bg-card); padding: 1rem; border-radius: 8px; margin-bottom: 1rem; border-left: 3px solid var(--primary);">
+            <div style="font-weight: 600; margin-bottom: 0.5rem;">Project: ${currentProject.name}</div>
+            ${currentProject.address ? `<div style="font-size: 0.875rem; color: var(--text-secondary);">Address: ${currentProject.address}</div>` : ''}
+            ${currentProject.client ? `<div style="font-size: 0.875rem; color: var(--text-secondary);">Client: ${currentProject.client}</div>` : ''}
+        </div>
+    `;
+    document.querySelector('#resultsView h2').insertAdjacentHTML('afterend', projectInfo);
+}
+            document.getElementById('resultImage').src = currentSample.image;
+            document.getElementById('confidenceValue').textContent = currentSample.confidence + '%';
+            document.getElementById('issuesCount').textContent = '1';
+            document.getElementById('costValue').textContent = issue.cost;
+            
+            const resultOverlay = document.getElementById('resultOverlay');
+            resultOverlay.innerHTML = '';
+            const box = document.createElement('div');
+            box.className = `detection-box ${issue.severity}`;
+            box.style.top = issue.box.top;
+            box.style.left = issue.box.left;
+            box.style.width = issue.box.width;
+            box.style.height = issue.box.height;
+            resultOverlay.appendChild(box);
+            
+            document.getElementById('issuesList').innerHTML = `
+                <div class="issue-item">
+                    <div class="issue-header-row">
+                        <div>
+                            <div class="issue-title">${issue.type}</div>
+                            <div class="issue-location">${issue.location}</div>
+                        </div>
+                        <div class="severity-badge severity-${issue.severity}">${issue.severity.toUpperCase()}</div>
+                    </div>
+                    <p style="color: var(--text-secondary); margin-bottom: 1rem;">${issue.desc}</p>
+                    <div class="issue-meta">
+                        <div>
+                            <div class="meta-label">AI Confidence</div>
+                            <div class="meta-value">${issue.confidence}%</div>
+                        </div>
+                        <div>
+                            <div class="meta-label">Est. Cost</div>
+                            <div class="meta-value">${issue.cost}</div>
+                        </div>
+                        <div>
+                            <div class="meta-label">Urgency</div>
+                            <div class="meta-value" style="color: ${issue.severity === 'high' ? 'var(--danger)' : 'var(--warning)'};">${issue.urgency}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            window.scrollTo(0, 0);
+        }
+async function exportPDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF('p', 'mm', 'a4');
+    const issue = currentSample.issue;
+    const pw = doc.internal.pageSize.getWidth();
+    const ph = doc.internal.pageSize.getHeight();
+    const m = 20;
+    const cw = pw - (m * 2);
+    
+    // Blue header background
+    doc.setFillColor(37, 99, 235);
+    doc.rect(0, 0, pw, 45, 'F');
+    
+    // Company branding
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(24);
+    doc.setFont(undefined, 'bold');
+    doc.text('StructureScan AI', m, 20);
+    
+    doc.setFontSize(10);
+    doc.setFont(undefined, 'normal');
+    doc.text('Professional Structural Analysis Report', m, 28);
+    doc.text('Powered by Restoration Experts Inc', m, 34);
+    
+    // Metadata box
+    doc.setTextColor(0, 0, 0);
+    doc.setFillColor(248, 250, 252);
+    doc.roundedRect(m, 55, cw, 25, 2, 2, 'F');
+    
+    doc.setFontSize(9);
+    doc.setFont(undefined, 'bold');
+    doc.text('Report Date:', m + 5, 63);
+    doc.text('Analysis ID:', m + 5, 70);
+    doc.text('Confidence:', m + 5, 77);
+    
+    doc.setFont(undefined, 'normal');
+    const ts = new Date().toLocaleString();
+    doc.text(ts, m + 30, 63);
+    doc.text('SSA-' + Math.random().toString(36).substr(2, 9).toUpperCase(), m + 30, 70);
+    doc.text(currentSample.confidence + '%', m + 30, 77);
+    
+    // Executive Summary
+    let y = 90;
+    doc.setFontSize(16);
+    doc.setFont(undefined, 'bold');
+    doc.setTextColor(37, 99, 235);
+    doc.text('Executive Summary', m, y);
+    
+    y += 10;
+    doc.setFontSize(10);
+    doc.setTextColor(0, 0, 0);
+    doc.setFont(undefined, 'normal');
+    
+    const sum = 'AI-powered structural analysis has identified critical issues requiring immediate attention. This report provides detailed findings, severity assessment, and recommended actions based on advanced computer vision algorithms.';
+    const sumLines = doc.splitTextToSize(sum, cw);
+    doc.text(sumLines, m, y);
+    y += sumLines.length * 5 + 10;
+    
+    // Critical Finding Alert Box
+    doc.setFillColor(254, 226, 226);
+    doc.setDrawColor(239, 68, 68);
+    doc.setLineWidth(0.5);
+    doc.roundedRect(m, y, cw, 40, 2, 2, 'FD');
+    
+    doc.setFontSize(14);
+    doc.setFont(undefined, 'bold');
+    doc.setTextColor(220, 38, 38);
+    doc.text('⚠ Critical Finding', m + 5, y + 8);
+    
+    doc.setFontSize(11);
+    doc.setTextColor(0, 0, 0);
+    doc.text(issue.type, m + 5, y + 16);
+    
+    doc.setFontSize(9);
+    doc.setFont(undefined, 'normal');
+    doc.text('Location: ' + issue.location, m + 5, y + 23);
+    doc.text('Severity: ' + issue.severity.toUpperCase(), m + 5, y + 29);
+    doc.text('Estimated Cost: ' + issue.cost, m + 5, y + 35);
+    
+    y += 50;
+    
+// Analysis Image Section
+doc.setFontSize(14);
+doc.setFont(undefined, 'bold');
+doc.setTextColor(37, 99, 235);
+doc.text('Analysis Image', m, y);
+y += 5;
+
+// Add the image directly from URL with CORS proxy
+try {
+    const imgSrc = currentSample.image;
+    doc.addImage(imgSrc, 'JPEG', m, y, cw, 80, undefined, 'FAST');
+    y += 90;
+} catch (error) {
+    doc.setFontSize(10);
+    doc.setTextColor(100, 100, 100);
+    doc.text('Image URL: ' + currentSample.image, m, y);
+    y += 10;
+}
+    
+    // Check if we need a new page
+    if (y > ph - 80) {
+        doc.addPage();
+        y = 20;
+    }
+    
+    // Detailed Analysis
+    doc.setFontSize(14);
+    doc.setFont(undefined, 'bold');
+    doc.setTextColor(37, 99, 235);
+    doc.text('Detailed Analysis', m, y);
+    y += 8;
+    
+    doc.setFontSize(10);
+    doc.setTextColor(0, 0, 0);
+    doc.setFont(undefined, 'normal');
+    const detailLines = doc.splitTextToSize(issue.desc, cw);
+    doc.text(detailLines, m, y);
+    y += detailLines.length * 5 + 10;
+    
+    // Recommendations Section
+    doc.setFontSize(14);
+    doc.setFont(undefined, 'bold');
+    doc.setTextColor(37, 99, 235);
+    doc.text('Recommendations', m, y);
+    y += 8;
+    
+    doc.setFontSize(10);
+    doc.setFont(undefined, 'normal');
+    doc.setTextColor(0, 0, 0);
+    
+    const recs = [
+        '• Immediate professional inspection by certified structural engineer',
+        '• Document all findings with additional photography',
+        '• Obtain repair quotes from licensed contractors',
+        '• Address within recommended urgency timeframe: ' + issue.urgency,
+        '• Monitor for progression until repairs are completed'
+    ];
+    
+    recs.forEach(rec => {
+        if (y > ph - 20) {
+            doc.addPage();
+            y = 20;
+        }
+        doc.text(rec, m, y);
+        y += 7;
+    });
+    
+    // Footer disclaimer
+    const footerY = ph - 25;
+    doc.setFontSize(8);
+    doc.setTextColor(100, 100, 100);
+    doc.setFont(undefined, 'italic');
+    const disclaimer = 'This report is generated by AI-assisted analysis and should be verified by qualified professionals. Restoration Experts Inc provides this analysis as a preliminary assessment tool.';
+    const disclaimerLines = doc.splitTextToSize(disclaimer, cw);
+    doc.text(disclaimerLines, m, footerY);
+    
+    doc.setDrawColor(200, 200, 200);
+    doc.line(m, footerY - 5, pw - m, footerY - 5);
+    
+    // Page numbers
+    const pageCount = doc.internal.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFontSize(8);
+        doc.setTextColor(150, 150, 150);
+        doc.text('Page ' + i + ' of ' + pageCount, pw - m - 20, ph - 10);
+    }
+    
+    // Save the PDF
+    const filename = 'StructureScan_Report_' + new Date().toISOString().slice(0,10) + '.pdf';
+    doc.save(filename);
+}
+    </script>
+</body>
+</html>
