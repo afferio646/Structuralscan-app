@@ -1035,13 +1035,22 @@ function startNewScanForCurrentProject() {
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            loadSettings();
-            if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.register('/sw.js')
-                    .then(registration => console.log('Service Worker registered with scope:', registration.scope))
-                    .catch(error => console.error('Service Worker registration failed:', error));
-            }
-        });
+    loadSettings();
+
+    // 1. Initialize Lead Tracking & Service Worker Registration
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js')
+            .then(registration => {
+                console.log('Service Worker registered.');
+                initializeLeadTracking(); 
+                // 2. Start push subscription process immediately after SW registration
+                subscribeUserToPush(registration); 
+            })
+            .catch(error => console.error('Service Worker registration failed:', error));
+    } else {
+         initializeLeadTracking(); // Run tracking initialization even if SW fails
+    }
+});
 
         function requestNotificationPermission() {
             if (!('Notification' in window)) {
@@ -1375,6 +1384,92 @@ try {
     // Save the PDF
     const filename = 'StructureScan_Report_' + new Date().toISOString().slice(0,10) + '.pdf';
     doc.save(filename);
+}
+        // =======================================================
+// === AFFEIOIQ LEAD TRACKING AND PUSH SYSTEM INTEGRATION ===
+// =======================================================
+
+// 1. Global Tracking Variables and Constants
+let currentLeadId = null;
+let currentExhId = null;
+const VAPID_PUBLIC_KEY = 'YOUR_VAPID_PUBLIC_KEY_HERE'; // *** CRITICAL: REPLACE WITH YOUR REAL KEY ***
+
+// Utility Function to get URL Parameters (Phase 1.3)
+function getUrlParameter(name) {
+    name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
+    const regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
+    const results = regex.exec(location.search);
+    return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
+}
+
+// =======================================================
+        // 2. Simulated/Required Server Functions
+// These functions simulate secure communication with your central database/API.
+
+// 2a. Notifies the server of a new lead activation (updates status in database)
+async function notifyServerOfFirstActivation(leadId, exhId) {
+    console.log(`[Server Sim] Lead ${leadId} activated for ${exhId}. Pushing initial data to database...`);
+    // *** INTEGRATION POINT: Replace with real secure fetch() call to your backend API ***
+}
+
+// 2b. Sends the push token back to the server (updates the 'pushToken' field in Lead Document)
+async function sendSubscriptionToServer(subscription) {
+    if (!currentLeadId) return;
+
+    const subscriptionData = JSON.stringify(subscription);
+    console.log(`[Server Sim] Saving Push Token for Lead ${currentLeadId}: ${subscriptionData.slice(0, 30)}...`);
+    // *** INTEGRATION POINT: Replace with real secure fetch() call to update the database ***
+}
+
+// 3. Push Enrollment Logic (Phase 3.2)
+async function subscribeUserToPush(registration) {
+    if (!('PushManager' in window)) return;
+    
+    // Check if permission is already granted/denied locally before subscribing
+    if (Notification.permission === 'granted') {
+        try {
+            const subscription = await registration.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: VAPID_PUBLIC_KEY 
+            });
+
+            console.log('User is subscribed.');
+            await sendSubscriptionToServer(subscription);
+
+        } catch (error) {
+            console.warn('Push subscription failed:', error);
+        }
+    } else {
+         console.warn('Push permission not granted locally.');
+    }
+}
+
+// 4. CORE FUNCTION: Initializes Tracking (Phase 1.3)
+function initializeLeadTracking() {
+    const urlLeadId = getUrlParameter('leadId');
+    const urlExhId = getUrlParameter('exhId');
+    const storedLeadId = localStorage.getItem('afferio_leadId');
+    const storedExhId = localStorage.getItem('afferio_exhId');
+
+    if (urlLeadId && urlExhId) {
+        // FIRST ACTIVATION (via NFC/QR Code): Save and notify server
+        currentLeadId = urlLeadId;
+        currentExhId = urlExhId;
+        localStorage.setItem('afferio_leadId', currentLeadId);
+        localStorage.setItem('afferio_exhId', currentExhId);
+        console.log(`[AfferioIQ] New Session Started. Lead ID: ${currentLeadId}`);
+        notifyServerOfFirstActivation(currentLeadId, currentExhId);
+
+    } else if (storedLeadId && storedExhId) {
+        // RETURN USER (Loaded directly from home screen icon)
+        currentLeadId = storedLeadId;
+        currentExhId = storedExhId;
+        console.log(`[AfferioIQ] Returning User Session. Lead ID: ${currentLeadId}`);
+        
+    } else {
+        // ERROR/MISSING ID (User visited URL without parameters or storage cleared)
+        console.warn("[AfferioIQ] Tracking Failed: No Lead ID found. Functionality limited.");
+    }
 }
     </script>
 </body>
