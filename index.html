@@ -1083,6 +1083,7 @@ function startNewScanForCurrentProject() {
             document.getElementById('detectionOverlay').innerHTML = '';
             document.getElementById('analysisStatus').classList.add('hidden');
             document.getElementById('analyzeBtn').disabled = false;
+            window.selectedSampleKey = type;
         }
 
         // --- Usage Meter and AI Execution Logic (Phase 3.1) ---
@@ -1122,35 +1123,33 @@ async function runAnalysis() {
 // --- NEW: Global variable for testing the cap ---
 let mockScansRemaining = 25; // STARTING CAP FOR TESTING (Adjust this number: 20-30)
 
+// --- REVISED Metered Analysis Function (Picks the Selected Sample) ---
 async function executeMeteredAnalysis(leadId) {
     console.log(`[Server Sim] Requesting metered analysis for ${leadId}...`);
     
-    // 1. SIMULATED USAGE CHECK
+    // --- 1. SIMULATED USAGE CHECK (Keep this logic for metering) ---
     if (mockScansRemaining <= 0) { 
          console.log(`[Server Sim] Usage cap reached for ${leadId}. Scans remaining: 0`);
          return { success: false, message: 'USAGE_CAP_REACHED' };
     }
     
-    // 2. SIMULATED DEDUCTION
-    // In a real system, the server deducts the scan in the database here.
-    // For testing, we deduct locally:
+    // --- 2. SIMULATED DEDUCTION ---
     mockScansRemaining -= 1; 
     console.log(`[Server Sim] Scan successful. New scans remaining: ${mockScansRemaining}`);
 
-    // 3. EXECUTE AI AND RETURN PAYLOAD
+    // --- 3. EXECUTE AI AND RETURN PAYLOAD (FIXED LOGIC) ---
     await new Promise(r => setTimeout(r, 1000));
     
-    const keys = Object.keys(samples);
-    const randomKey = keys[Math.floor(Math.random() * keys.length)];
+    // Check which sample key was selected globally
+    const selectedKey = window.selectedSampleKey;
     
+    // *** CRITICAL CHANGE: Return the exact sample data selected by the user ***
     return { 
         success: true, 
-        // We also send the remaining count back to the PWA for display (optional UX feature)
         scansRemaining: mockScansRemaining,
-        data: samples[randomKey] 
+        data: samples[selectedKey] // <-- Now returns the selected, non-random data
     };
 }
-
 // --- NEW: Visual progress animation function ---
 function animateProgressBar() {
     document.getElementById('progressBar').style.width = '0%';
