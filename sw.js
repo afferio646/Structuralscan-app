@@ -1,47 +1,43 @@
 // sw.js
 
-// Listener for the install event - caches necessary assets.
+// Listener for the install event - caching logic is commented out for now.
 self.addEventListener('install', (event) => {
     console.log('Service Worker: Installing...');
-    // event.waitUntil(
-    //     caches.open(CACHE_NAME).then((cache) => {
-    //         console.log('Service Worker: Caching app shell');
-    //         return cache.addAll(assetsToCache);
-    //     })
-    // );
+    // We keep caching logic commented out to simplify the serverless deployment model for now
     self.skipWaiting(); // Activate worker immediately
 });
 
-// Listener for the activate event - cleans up old caches.
+// Listener for the activate event.
 self.addEventListener('activate', (event) => {
     console.log('Service Worker: Activating...');
     event.waitUntil(clients.claim()); // Become available to all pages
 });
 
-// Listener for push events from the server.
+
+// Listener for push events from the server (Enhanced for AfferioIQ data).
 self.addEventListener('push', (event) => {
     console.log('Service Worker: Push Received.');
 
-    // Default data for the notification
-    const notificationData = {
-        title: 'New Notification',
-        body: 'You have a new message from StructureScan AI.',
-        icon: '/icon-192x112.png'
-    };
-
-    // Attempt to parse data from the push event
-    let pushData;
+    let data = {};
     try {
-        pushData = event.data.json();
+        // Parse the data sent from your dashboard/server.
+        data = event.data.json();
     } catch (e) {
-        pushData = notificationData;
+        // Fallback for plain text or unexpected data structure
+        console.error("Push data parsing error:", e);
     }
-
-    const title = pushData.title || notificationData.title;
+    
+    // Default and Options based on the data received
+    const title = data.title || 'New Update from AfferioIQ Client';
     const options = {
-        body: pushData.body || notificationData.body,
-        icon: pushData.icon || notificationData.icon,
-        badge: '/icon-96x96.png'
+        body: data.body || 'Check your branded utility tool for a new message.',
+        icon: data.icon || './icon-192x192.png', // Fallback
+        badge: data.badge || './icon-96x96.png', // Fallback
+        
+        // CRITICAL: Store the link URL so we can open the app to a specific page or offer.
+        data: {
+            url: data.link || '/' 
+        }
     };
 
     event.waitUntil(
@@ -49,22 +45,27 @@ self.addEventListener('push', (event) => {
     );
 });
 
-// Optional: Listener for notification click events.
+
+// Listener for notification click events (Enhanced for deep linking).
 self.addEventListener('notificationclick', (event) => {
     console.log('Service Worker: Notification clicked.');
     event.notification.close();
 
-    // Focus or open a window when the notification is clicked
+    const targetUrl = event.notification.data.url || '/';
+
+    // Focus an existing client window or open a new one at the target URL.
     event.waitUntil(
         clients.matchAll({ type: 'window' }).then((clientList) => {
             for (let i = 0; i < clientList.length; i++) {
                 let client = clientList[i];
-                if (client.url === '/' && 'focus' in client) {
+                // Check if the client is already open and focus it
+                if (client.url.includes(targetUrl) && 'focus' in client) {
                     return client.focus();
                 }
             }
+            // If not open, open a new window with the specific URL
             if (clients.openWindow) {
-                return clients.openWindow('/');
+                return clients.openWindow(targetUrl);
             }
         })
     );
