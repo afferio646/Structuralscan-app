@@ -1085,41 +1085,94 @@ function startNewScanForCurrentProject() {
             document.getElementById('analyzeBtn').disabled = false;
         }
 
-        function runAnalysis() {
-            document.getElementById('analyzeBtn').disabled = true;
-            document.getElementById('analysisStatus').classList.remove('hidden');
-            
-            const statuses = [
-                'Initializing AI detection...',
-                'Analyzing image structure...',
-                'Detecting anomalies...',
-                'Measuring damage severity...',
-                'Calculating repair costs...',
-                'Finalizing analysis...'
-            ];
-            
-            let progress = 0;
-            let statusIndex = 0;
-            
-            const interval = setInterval(() => {
-                progress += 2;
-                document.getElementById('progressBar').style.width = progress + '%';
-                
-                if (progress % 17 === 0 && statusIndex < statuses.length) {
-                    document.getElementById('statusText').textContent = statuses[statusIndex];
-                    statusIndex++;
-                }
-                
-                if (progress === 60) {
-                    showDetectionBox();
-                }
-                
-                if (progress >= 100) {
-                    clearInterval(interval);
-                    setTimeout(showResults, 800);
-                }
-            }, 60);
-        }
+        // --- Usage Meter and AI Execution Logic (Phase 3.1) ---
+async function runAnalysis() {
+    if (!currentLeadId) {
+        alert("Tracking Error: Please launch the app using your unique NFC card or link.");
+        return;
+    }
+
+    // 1. SHOW LOADING UI
+    document.getElementById('analyzeBtn').disabled = true;
+    document.getElementById('analysisStatus').classList.remove('hidden');
+
+    // 2. CRITICAL STEP: Check Usage Cap and Execute AI/Deduct Scan on the server
+    const analysisResult = await executeMeteredAnalysis(currentLeadId); 
+
+    // 3. Handle Results
+    if (analysisResult.success) {
+        // Update UI with real results (using mock data from the server)
+        currentSample = analysisResult.data; // Server sends back the full mock result payload
+
+        // Simulate progress animation visually before showing results
+        await animateProgressBar(); 
+
+        showResults();
+    } else if (analysisResult.message === 'USAGE_CAP_REACHED') {
+        alert("Scan failed: You have reached your pre-paid scan limit. Please contact the exhibitor for a renewal token.");
+        document.getElementById('analysisStatus').classList.add('hidden');
+        document.getElementById('analyzeBtn').disabled = false;
+    } else {
+        alert(`Analysis failed: ${analysisResult.message}`);
+        document.getElementById('analysisStatus').classList.add('hidden');
+        document.getElementById('analyzeBtn').disabled = false;
+    }
+}
+
+// --- NEW: Simulates the critical server-side transaction ---
+async function executeMeteredAnalysis(leadId) {
+    console.log(`[Server Sim] Requesting metered analysis for ${leadId}...`);
+
+    // **This entire function simulates the API call to your backend**
+    // In a real system, the server checks the database, calls Gemini, and deducts the scan.
+
+    // MOCK LOGIC: Simulate reaching the limit 10% of the time for testing
+    if (Math.random() < 0.1) { 
+         return { success: false, message: 'USAGE_CAP_REACHED' };
+    }
+
+    // Simulate progress and return mock success payload
+    await new Promise(r => setTimeout(r, 1000));
+
+    // Return a randomly chosen sample result payload to show the 'WOW factor'
+    const keys = Object.keys(samples);
+    const randomKey = keys[Math.floor(Math.random() * keys.length)];
+
+    // Assume the server sends back the full, validated payload
+    return { 
+        success: true, 
+        data: samples[randomKey] 
+    };
+}
+
+// --- NEW: Visual progress animation function ---
+function animateProgressBar() {
+    document.getElementById('progressBar').style.width = '0%';
+    let progress = 0;
+    let statusIndex = 0;
+    const statuses = [
+        'Initializing AI detection...', 'Analyzing image structure...', 
+        'Detecting anomalies...', 'Measuring damage severity...', 
+        'Calculating repair costs...', 'Finalizing analysis...'
+    ];
+
+    return new Promise(resolve => {
+        const interval = setInterval(() => {
+            progress += 5; // Animate faster
+            document.getElementById('progressBar').style.width = progress + '%';
+
+            if (progress % 17 < 5 && statusIndex < statuses.length) {
+                document.getElementById('statusText').textContent = statuses[statusIndex];
+                statusIndex++;
+            }
+
+            if (progress >= 100) {
+                clearInterval(interval);
+                resolve();
+            }
+        }, 60);
+    });
+}
 
         function showDetectionBox() {
             const overlay = document.getElementById('detectionOverlay');
