@@ -1079,9 +1079,18 @@ textarea.form-input {
     // --- The primary function called by the Analyze button ---
     async function runAnalysis() {
         if (!currentLeadId || !window.selectedSampleKey) { 
+           // EMERGENCY FIX: Ensure a sample is always loaded for the demo to run
+        if (!window.selectedSampleKey) {
+            currentSample = samples['water']; // Forces the default sample
+            window.selectedSampleKey = 'water';
+        }
+        
+        // If the lead ID is missing, we must fail
+        if (!currentLeadId) {
             alert("Tracking Error: Please ensure you launch the app with a tracking ID and select a sample image.");
             return;
         }
+    }
 
         document.getElementById('analyzeBtn').disabled = true;
         document.getElementById('analysisStatus').classList.remove('hidden');
