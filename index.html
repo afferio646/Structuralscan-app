@@ -1088,8 +1088,9 @@ function startNewScanForCurrentProject() {
 
         // --- Usage Meter and AI Execution Logic (Phase 3.1) ---
 // --- Finalized runAnalysis() Function Blueprint (REPLACES ORIGINAL FUNCTION) ---
+// --- RESTORED WORKING MOCK: Run Analysis Function ---
 async function runAnalysis() {
-    // PASSES THE GLOBAL TRACKING IDS TO THE METERED FUNCTION
+    // PASSES THE GLOBAL TRACKING IDS (Needed even in mock state)
     if (!currentLeadId || !currentExhId) {
         alert("Tracking Error: Please launch the app using your unique NFC card or link.");
         return;
@@ -1099,12 +1100,12 @@ async function runAnalysis() {
     document.getElementById('analyzeBtn').disabled = true;
     document.getElementById('analysisStatus').classList.remove('hidden');
 
-    // 2. Execute Metered Analysis (calls the secure API endpoint blueprint)
-    const analysisResult = await executeMeteredAnalysis(currentLeadId, currentExhId); 
+    // 2. Execute Metered Analysis (calls the working mock logic)
+    const analysisResult = await executeMeteredAnalysis(currentLeadId); 
 
     // 3. Handle Results
     if (analysisResult.success) {
-        // Update UI with the real data returned by the server
+        // Update UI with the random mock data
         currentSample = analysisResult.data; 
         
         // Simulate progress animation visually before showing results
@@ -1124,93 +1125,35 @@ async function runAnalysis() {
 }
 
 
-// --- Function executed by runAnalysis() to communicate with the Backend Engine (Endpoint A Blueprint) ---
-async function executeMeteredAnalysis(leadId, exhId) {
-    
-    if (!leadId || !exhId) {
-        return { success: false, message: 'TRACKING_MISSING' };
-    }
-
-    // 1. Prepare Data Payload
-    const payload = {
-        leadId: leadId,
-        exhId: exhId,
-        imageData: captureImageAsBase64(), 
-        prompt: "Analyze the image for structural damage (corrosion, crack, water). Provide severity, estimated cost range, and certainty score for the report." 
-    };
-
-    try {
-        // 2. Execute Secure API Call (to Endpoint A: /api/v1/scan)
-        const response = await fetch(`${BACKEND_URL}/api/v1/scan`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(payload)
-        });
-
-        // 3. Handle Network Errors
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const result = await response.json();
-
-        // 4. Handle Business Logic Errors
-        if (result.error) {
-            if (result.code === 'USAGE_CAP_REACHED') {
-                return { success: false, message: 'USAGE_CAP_REACHED' };
-            }
-            return { success: false, message: result.message };
-        }
-        
-        // 5. Success: Return the final analysis data
-        return { 
-            success: true, 
-            data: result.analysisData,
-            scansRemaining: result.scansRemaining 
-        };
-
-    } catch (e) {
-        console.error("Scan API Failure:", e);
-        return { success: false, message: "A network error occurred. Please check connectivity." };
-    }
-}
-
-
-// --- NOTE: The existing animateProgressBar() function should be KEPT as is. ---
-// --- NOTE: The existing showDetectionBox() and showResults() should be KEPT as is. ---
-// --- NEW: Global variable for testing the cap ---
-let mockScansRemaining = 25; // STARTING CAP FOR TESTING (Adjust this number: 20-30)
-
-// --- REVISED Metered Analysis Function (Picks the Selected Sample) ---
+// --- RESTORED WORKING MOCK: executeMeteredAnalysis (Uses local counter) ---
 async function executeMeteredAnalysis(leadId) {
     console.log(`[Server Sim] Requesting metered analysis for ${leadId}...`);
     
-    // --- 1. SIMULATED USAGE CHECK (Keep this logic for metering) ---
+    // 1. SIMULATED USAGE CHECK (Uses local mock variable)
     if (mockScansRemaining <= 0) { 
          console.log(`[Server Sim] Usage cap reached for ${leadId}. Scans remaining: 0`);
          return { success: false, message: 'USAGE_CAP_REACHED' };
     }
     
-    // --- 2. SIMULATED DEDUCTION ---
+    // 2. SIMULATED DEDUCTION
+    // We deduct locally since there is no server to deduct from yet.
     mockScansRemaining -= 1; 
     console.log(`[Server Sim] Scan successful. New scans remaining: ${mockScansRemaining}`);
 
-    // --- 3. EXECUTE AI AND RETURN PAYLOAD (FIXED LOGIC) ---
+    // 3. EXECUTE AI AND RETURN PAYLOAD
     await new Promise(r => setTimeout(r, 1000));
     
-    // Check which sample key was selected globally
-    const selectedKey = window.selectedSampleKey;
+    const keys = Object.keys(samples);
+    const randomKey = keys[Math.floor(Math.random() * keys.length)];
     
-    // *** CRITICAL CHANGE: Return the exact sample data selected by the user ***
     return { 
         success: true, 
-        scansRemaining: mockScansRemaining,
-        data: samples[selectedKey] // <-- Now returns the selected, non-random data
+        data: samples[randomKey] 
     };
 }
-// --- NEW: Visual progress animation function ---
+
+
+// --- RESTORED WORKING ANIMATION (Keep this if it was removed earlier) ---
 function animateProgressBar() {
     document.getElementById('progressBar').style.width = '0%';
     let progress = 0;
@@ -1220,17 +1163,17 @@ function animateProgressBar() {
         'Detecting anomalies...', 'Measuring damage severity...', 
         'Calculating repair costs...', 'Finalizing analysis...'
     ];
-
+    
     return new Promise(resolve => {
         const interval = setInterval(() => {
             progress += 5; // Animate faster
             document.getElementById('progressBar').style.width = progress + '%';
-
+            
             if (progress % 17 < 5 && statusIndex < statuses.length) {
                 document.getElementById('statusText').textContent = statuses[statusIndex];
                 statusIndex++;
             }
-
+            
             if (progress >= 100) {
                 clearInterval(interval);
                 resolve();
@@ -1238,7 +1181,6 @@ function animateProgressBar() {
         }, 60);
     });
 }
-
         function showDetectionBox() {
             const overlay = document.getElementById('detectionOverlay');
             const issue = currentSample.issue;
