@@ -1087,28 +1087,31 @@ function startNewScanForCurrentProject() {
         }
 
         // --- Usage Meter and AI Execution Logic (Phase 3.1) ---
+// --- Finalized runAnalysis() Function Blueprint (REPLACES ORIGINAL FUNCTION) ---
 async function runAnalysis() {
-    if (!currentLeadId) {
+    // PASSES THE GLOBAL TRACKING IDS TO THE METERED FUNCTION
+    if (!currentLeadId || !currentExhId) {
         alert("Tracking Error: Please launch the app using your unique NFC card or link.");
         return;
     }
 
-    // 1. SHOW LOADING UI
+    // 1. Show loading UI
     document.getElementById('analyzeBtn').disabled = true;
     document.getElementById('analysisStatus').classList.remove('hidden');
 
-    // 2. CRITICAL STEP: Check Usage Cap and Execute AI/Deduct Scan on the server
-    const analysisResult = await executeMeteredAnalysis(currentLeadId); 
+    // 2. Execute Metered Analysis (calls the secure API endpoint blueprint)
+    const analysisResult = await executeMeteredAnalysis(currentLeadId, currentExhId); 
 
     // 3. Handle Results
     if (analysisResult.success) {
-        // Update UI with real results (using mock data from the server)
-        currentSample = analysisResult.data; // Server sends back the full mock result payload
-
+        // Update UI with the real data returned by the server
+        currentSample = analysisResult.data; 
+        
         // Simulate progress animation visually before showing results
         await animateProgressBar(); 
-
+        
         showResults();
+        
     } else if (analysisResult.message === 'USAGE_CAP_REACHED') {
         alert("Scan failed: You have reached your pre-paid scan limit. Please contact the exhibitor for a renewal token.");
         document.getElementById('analysisStatus').classList.add('hidden');
@@ -1120,6 +1123,63 @@ async function runAnalysis() {
     }
 }
 
+
+// --- Function executed by runAnalysis() to communicate with the Backend Engine (Endpoint A Blueprint) ---
+async function executeMeteredAnalysis(leadId, exhId) {
+    
+    if (!leadId || !exhId) {
+        return { success: false, message: 'TRACKING_MISSING' };
+    }
+
+    // 1. Prepare Data Payload
+    const payload = {
+        leadId: leadId,
+        exhId: exhId,
+        imageData: captureImageAsBase64(), 
+        prompt: "Analyze the image for structural damage (corrosion, crack, water). Provide severity, estimated cost range, and certainty score for the report." 
+    };
+
+    try {
+        // 2. Execute Secure API Call (to Endpoint A: /api/v1/scan)
+        const response = await fetch(`${BACKEND_URL}/api/v1/scan`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(payload)
+        });
+
+        // 3. Handle Network Errors
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const result = await response.json();
+
+        // 4. Handle Business Logic Errors
+        if (result.error) {
+            if (result.code === 'USAGE_CAP_REACHED') {
+                return { success: false, message: 'USAGE_CAP_REACHED' };
+            }
+            return { success: false, message: result.message };
+        }
+        
+        // 5. Success: Return the final analysis data
+        return { 
+            success: true, 
+            data: result.analysisData,
+            scansRemaining: result.scansRemaining 
+        };
+
+    } catch (e) {
+        console.error("Scan API Failure:", e);
+        return { success: false, message: "A network error occurred. Please check connectivity." };
+    }
+}
+
+
+// --- NOTE: The existing animateProgressBar() function should be KEPT as is. ---
+// --- NOTE: The existing showDetectionBox() and showResults() should be KEPT as is. ---
 // --- NEW: Global variable for testing the cap ---
 let mockScansRemaining = 25; // STARTING CAP FOR TESTING (Adjust this number: 20-30)
 
@@ -1451,7 +1511,19 @@ try {
 let currentLeadId = null;
 let currentExhId = null;
 const VAPID_PUBLIC_KEY = 'YOUR_VAPID_PUBLIC_KEY_HERE'; // *** CRITICAL: REPLACE WITH YOUR REAL KEY ***
+// Define your secure backend URL once here:
+const BACKEND_URL = 'YOUR_SECURE_BACKEND_URL'; // *** CRITICAL: REPLACE WITH YOUR SERVER URL WHEN DEPLOYED ***
 
+
+// --- NEW Helper Function (Required by executeMeteredAnalysis) ---
+function captureImageAsBase64() {
+    // For the prototype, we simulate sending the data by returning the image URL of the selected sample.
+    if (currentSample && currentSample.image) {
+        return currentSample.image; 
+    }
+    return null; 
+}
+// ---------------------------------------------------------
 // Utility Function to get URL Parameters (Phase 1.3)
 function getUrlParameter(name) {
     name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
