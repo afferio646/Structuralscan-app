@@ -1515,9 +1515,16 @@ const VAPID_PUBLIC_KEY = 'YOUR_VAPID_PUBLIC_KEY_HERE'; // *** CRITICAL: REPLACE 
 const BACKEND_URL = 'YOUR_SECURE_BACKEND_URL'; // *** CRITICAL: REPLACE WITH YOUR SERVER URL WHEN DEPLOYED ***
 
 
+// --- Global Tracking Variables and Constants (New Code) ---
+let currentLeadId = null;
+let currentExhId = null;
+const VAPID_PUBLIC_KEY = 'YOUR_VAPID_PUBLIC_KEY_HERE'; 
+
+// Define your secure backend URL once here:
+const BACKEND_URL = 'YOUR_SECURE_BACKEND_URL'; 
+
 // --- NEW Helper Function (Required by executeMeteredAnalysis) ---
 function captureImageAsBase64() {
-    // For the prototype, we simulate sending the data by returning the image URL of the selected sample.
     if (currentSample && currentSample.image) {
         return currentSample.image; 
     }
